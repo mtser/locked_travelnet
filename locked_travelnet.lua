@@ -6,19 +6,20 @@
 
 
 local function on_interact(pos, _, player)
-	if not locks:lock_allow_use( pos, player ) then
-		return false
-	end
 	local meta = minetest.get_meta(pos)
-	local unconfiged = travelnet.is_falsey_string(meta:get_string("station_name",   ""))
-	if unconfiged then return end
 	local legacy_formspec = meta:get_string("formspec")
 	if not travelnet.is_falsey_string(legacy_formspec) then
-		meta:set_string("formspec", "")
+        	meta:set_string("formspec", "")
 	end
 
 	local player_name = player:get_player_name()
-	travelnet.show_current_formspec(pos, meta, player_name)
+	if not locks:lock_allow_use( pos, player ) then
+		minetest.chat_send_player(player_name, "This station is locked!")
+	elseif minetest.is_protected(pos, player_name) and minetest.is_protected(pos, "PublicTP") then
+		minetest.chat_send_player(player_name, "This station is protected!")
+	else
+		travelnet.show_current_formspec(pos, meta, player_name)
+	end
 end
 
 minetest.register_node("locked_travelnet:travelnet", {
